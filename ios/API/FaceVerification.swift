@@ -9,6 +9,7 @@
 import Foundation
 import FaceTecSDK
 
+// TODO Rework as on Android
 class FaceVerification {
     // singletone instance
     static let shared = FaceVerification()

@@ -15,7 +15,7 @@ public final class Session {
 
   public static void getSessionToken(final SessionTokenCallback callback) {
     // TODO Pass the URLs from the RN during the initializations if we want them custom?
-    Request tokenRequest = ApiBase.createRequest("/session-token", "get", null);
+    Request tokenRequest = ApiBase.createRequest(null, "/session-token", "get", null);
 
     ApiBase.sendRequest(tokenRequest, new ApiBase.APICallback() {
       @Override

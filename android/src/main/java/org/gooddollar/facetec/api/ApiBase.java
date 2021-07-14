@@ -69,30 +69,30 @@ public final class ApiBase {
     return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString());
   }
 
-  public static void enroll(String enrollmentIdentifier, JSONObject payload, final APICallback callback) {
-    enroll(enrollmentIdentifier, jsonStringify(payload), null, callback);
+  public static void enroll(String sessionId, String enrollmentIdentifier, JSONObject payload, final APICallback callback) {
+    enroll(sessionId, enrollmentIdentifier, jsonStringify(payload), null, callback);
   }
 
-  public static void enroll(String enrollmentIdentifier, RequestBody customRequest, final APICallback callback) {
-    enroll(enrollmentIdentifier, customRequest, null, callback);
+  public static void enroll(String sessionId, String enrollmentIdentifier, RequestBody customRequest, final APICallback callback) {
+    enroll(sessionId, enrollmentIdentifier, customRequest, null, callback);
   }
 
-  public static void enroll(String enrollmentIdentifier, JSONObject payload, @Nullable Integer timeout, final APICallback callback) {
-    enroll(enrollmentIdentifier, jsonStringify(payload), timeout, callback);
+  public static void enroll(String sessionId, String enrollmentIdentifier, JSONObject payload, @Nullable Integer timeout, final APICallback callback) {
+    enroll(sessionId, enrollmentIdentifier, jsonStringify(payload), timeout, callback);
   }
 
-  public static void enroll(String enrollmentIdentifier, RequestBody customRequest, @Nullable Integer timeout, final APICallback callback) {
+  public static void enroll(String sessionId, String enrollmentIdentifier, RequestBody customRequest, @Nullable Integer timeout, final APICallback callback) {
     // TODO Fetch API url from env?
-    Request enrollmentRequest = createRequest("/enrollment-3d" + enrollmentIdentifier, "post", customRequest);
+    Request enrollmentRequest = createRequest(sessionId, "/enrollment-3d" + enrollmentIdentifier, "post", customRequest);
     sendRequest(enrollmentRequest, timeout, callback);
   }
 
-  public static Request createRequest(String url, @Nullable String method, @Nullable RequestBody body) {
+  public static Request createRequest(@Nullable String sessionId, String url, @Nullable String method, @Nullable RequestBody body) {
     Request.Builder request = new Request.Builder()
       .url(_serverURL + url)
       .header("Content-Type", "application/json")
       .header("X-Device-License-Key", _deviceKey)
-      .header("User-Agent", FaceTecSDK.createFaceTecAPIUserAgentString(""));
+      .header("User-Agent", FaceTecSDK.createFaceTecAPIUserAgentString(sessionId != null ? sessionId : ""));
 
     switch (method) {
       case "post":
