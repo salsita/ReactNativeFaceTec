@@ -15,13 +15,14 @@ import okhttp3.Response;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.facetec.sdk.FaceTecSDK;
 import org.gooddollar.facetec.api.NetworkingHelpers;
 
 public final class FaceVerification {
   private FaceVerification() {}
   private final static OkHttpClient http = NetworkingHelpers.getApiClient();
-  private static String _jwtAccessToken;
   private static String _serverURL;
+  private static String _deviceKey;
 
   private static String unexpectedMessage = "An unexpected issue during the face verification API call";
   private static String succeedProperty = "success";
@@ -60,9 +61,9 @@ public final class FaceVerification {
     void onSessionTokenReceived(String sessionToken);
   }
 
-  public static void register(String serverURL, String jwtAccessToken) {
+  public static void register(String serverURL, String deviceKey) {
     _serverURL = serverURL;
-    _jwtAccessToken = jwtAccessToken;
+    _deviceKey = deviceKey;
   }
 
   public static RequestBody jsonStringify(JSONObject body) {
@@ -70,17 +71,17 @@ public final class FaceVerification {
   }
 
   public static void getSessionToken(final SessionTokenCallback callback) {
-    Request tokenRequest = createRequest("/verify/face/session", "post", new JSONObject());
+    // TODO Pass the URLs from the RN during the initializations if we want them custom?
+    Request tokenRequest = createRequest("/session-token", "get", new JSONObject());
 
     sendRequest(tokenRequest, new APICallback() {
       @Override
       public void onSuccess(JSONObject response) {
         try {
-          if (response.has(sessionTokenProperty) == false) {
-            throw new APIException("FaceTec API response is empty", response);
-          }
-
-          callback.onSessionTokenReceived(response.getString(sessionTokenProperty));
+            if(response.has("sessionToken") == false) {
+              throw new APIException("FaceTec API response is missing sessionToken", response);
+            }
+            callback.onSessionTokenReceived(response.getString("sessionToken"));
         } catch (APIException exception) {
           callback.onFailure(exception);
         } catch (Exception exception) {
@@ -117,7 +118,9 @@ public final class FaceVerification {
     Request.Builder request = new Request.Builder()
       .url(_serverURL + url)
       .header("Content-Type", "application/json")
-      .header("Authorization", "Bearer " + _jwtAccessToken);
+      .header("X-Device-License-Key", _deviceKey)
+      .header("User-Agent", FaceTecSDK.createFaceTecAPIUserAgentString(""));
+
 
     switch (method) {
       case "post":

@@ -92,9 +92,9 @@ open class FaceTecModule: RCTEventEmitter {
         ]
     }
 
-    @objc(initializeSDK:jwtAccessToken:licenseKey:encryptionKey:licenseText:resolver:rejecter:)
+    @objc(initializeSDK:jwtAccessToken:deviceKey:encryptionKey:licenseText:resolver:rejecter:)
     open func initializeSDK(_ serverURL: String, jwtAccessToken: String,
-        licenseKey: String, encryptionKey: String, licenseText: String? = nil,
+        deviceKey: String, encryptionKey: String, licenseText: String? = nil,
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock) -> Void
     {
@@ -106,12 +106,12 @@ open class FaceTecModule: RCTEventEmitter {
                 FaceTec.sdk.setDynamicStrings(Customization.UITextStrings)
                 promise.resolve(true)
             case .neverInitialized, .networkIssues:
-                FaceVerification.shared.register(serverURL, jwtAccessToken)
+                FaceVerification.shared.register(serverURL, deviceKey)
 
                 if !licenseText.isEmptyOrNil {
                     FaceTec.sdk.initializeInProductionMode(
                         productionKeyText: licenseText!,
-                        deviceKeyIdentifier: licenseKey,
+                        deviceKeyIdentifier: deviceKey,
                         faceScanEncryptionKey: encryptionKey
                     ) { success in self.onInitializationAttempt(promise, success) }
 
@@ -119,7 +119,7 @@ open class FaceTecModule: RCTEventEmitter {
                 }
 
                 FaceTec.sdk.initializeInDevelopmentMode(
-                    deviceKeyIdentifier: licenseKey,
+                    deviceKeyIdentifier: deviceKey,
                     faceScanEncryptionKey: encryptionKey
                 ) { success in self.onInitializationAttempt(promise, success) }
             default:

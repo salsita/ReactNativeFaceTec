@@ -31,13 +31,9 @@ export class FaceTecSDK {
   }
 
   // eslint-disable-line require-await
-  async initialize(serverUrl, jsonWebToken, licenseKey, encryptionKey = null, licenseText = null) {
+  async initialize(serverUrl, deviceKey, encryptionKey = null, licenseText = null) {
     const { module } = this
-
-    // we're passing current JWT to the native code allowing it to call GoodServer for verification
-    // unfortunately we couldn't pass callback which could return some data back to the native code
-    // so it's only way to integrate FaceTec on native - to reimplement all logic about calling server
-    return module.initializeSDK(serverUrl, jsonWebToken, licenseKey, encryptionKey, licenseText)
+    return module.initializeSDK(serverUrl, deviceKey, encryptionKey, licenseText)
   }
 
   async enroll(enrollmentIdentifier, maxRetries = -1, timeout = -1) {

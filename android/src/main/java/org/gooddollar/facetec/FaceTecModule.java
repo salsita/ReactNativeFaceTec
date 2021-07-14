@@ -135,7 +135,7 @@ public class FaceTecModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void initializeSDK(String serverURL, String jwtAccessToken,
-        String licenseKey, String encryptionKey, String licenseText,
+        String deviceKey, String encryptionKey, String licenseText,
         final Promise promise
     ) {
         final Activity activity = getCurrentActivity();
@@ -151,15 +151,15 @@ public class FaceTecModule extends ReactContextBaseJavaModule {
                 break;
             case NEVER_INITIALIZED:
             case NETWORK_ISSUES:
-                FaceVerification.register(serverURL, jwtAccessToken);
+                FaceVerification.register(serverURL, deviceKey);
 
                 // based on licenseText value, init in prod|dev mode
                 if (licenseText != null && !licenseText.isEmpty()) {
-                    FaceTecSDK.initializeInProductionMode(activity, licenseText, licenseKey, encryptionKey, onInitializationAttempt(activity, promise));
+                    FaceTecSDK.initializeInProductionMode(activity, licenseText, deviceKey, encryptionKey, onInitializationAttempt(activity, promise));
                     return;
                 }
 
-                FaceTecSDK.initializeInDevelopmentMode(activity, licenseKey, encryptionKey, onInitializationAttempt(activity, promise));
+                FaceTecSDK.initializeInDevelopmentMode(activity, deviceKey, encryptionKey, onInitializationAttempt(activity, promise));
                 break;
             default:
                 RCTPromise.rejectWith(promise, status);

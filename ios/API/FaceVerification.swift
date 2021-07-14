@@ -7,13 +7,14 @@
 //
 
 import Foundation
+import FaceTecSDK
 
 class FaceVerification {
     // singletone instance
     static let shared = FaceVerification()
 
     private var serverURL: String?
-    private var jwtAccessToken: String?
+    private var deviceKey: String?
     private var lastRequest: URLSessionTask?
 
     private let succeedProperty = "success"
@@ -22,19 +23,34 @@ class FaceVerification {
 
     private init() {}
 
-    func register(_ serverURL: String, _ jwtAccessToken: String) -> Void {
+    func register(_ serverURL: String, _ deviceKey: String) -> Void {
         self.serverURL = serverURL
-        self.jwtAccessToken = jwtAccessToken
+        self.deviceKey = deviceKey
     }
 
     func getSessionToken(sessionTokenCallback: @escaping (String?, Error?) -> Void) -> Void {
-        request("/verify/face/session", "POST", [:]) { response, error in
+        // TODO Verify if it works on iOS and then remove this commented code
+        // request("/verify/face/session", "POST", [:]) { response, error in
+        //     if error != nil {
+        //         sessionTokenCallback(nil, error)
+        //         return
+        //     }
+
+        //     guard let sessionToken = response?[self.sessionTokenProperty] as? String else {
+        //         sessionTokenCallback(nil, FaceVerificationError.emptyResponse)
+        //         return
+        //     }
+
+        //     sessionTokenCallback(sessionToken, nil)
+        // }
+
+        request("/session-token", "GET", [:]) { response, error in
             if error != nil {
                 sessionTokenCallback(nil, error)
                 return
             }
 
-            guard let sessionToken = response?[self.sessionTokenProperty] as? String else {
+            guard let sessionToken = response?[self.sessionToken] as? String else {
                 sessionTokenCallback(nil, FaceVerificationError.emptyResponse)
                 return
             }
@@ -171,7 +187,10 @@ class FaceVerification {
         request.httpMethod = method.uppercased()
 
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("Bearer " + jwtAccessToken!, forHTTPHeaderField: "Authorization")
+        request.addValue(jwtAccessToken!, forHTTPHeaderField: "X-Device-License-Key")
+        .header("X-Device-License-Key", deviceKey)
+        .header("User-Agent", FaceTec.sdk.createFaceTecAPIUserAgentString(""))
+
 
         request.httpBody = try! JSONSerialization.data(withJSONObject: parameters, options: JSONSerialization.WritingOptions(rawValue: 0))
 

@@ -75,7 +75,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
 
         @Override
         public void onFailure(FaceVerification.APIException exception) {
-          subscriber.onSessionTokenError();
+          subscriber.onSessionTokenError(exception.getResponse().toString());
         }
       };
 

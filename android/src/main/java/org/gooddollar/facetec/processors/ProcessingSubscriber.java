@@ -22,15 +22,15 @@ public class ProcessingSubscriber {
     }
 
     if (sessionResult == null) {
-      onSessionTokenError();
+      onSessionTokenError("Session result is null.");
       return;
     }
 
     RCTPromise.rejectWith(promise, sessionResult.getStatus(), sessionMessage);
   }
 
-  public void onSessionTokenError() {
-    String message = "Session could not be started due to an unexpected issue during the network request.";
+  public void onSessionTokenError(@Nullable String sessionMessage) {
+    String message = "Session could not be started due to an unexpected issue during the network request. Error: " + sessionMessage;
 
     RCTPromise.rejectWith(promise, FaceTecSessionStatus.UNKNOWN_INTERNAL_ERROR, message);
   }
