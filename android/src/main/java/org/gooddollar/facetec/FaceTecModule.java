@@ -134,8 +134,7 @@ public class FaceTecModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void initializeSDK(String serverURL, String jwtAccessToken,
-        String deviceKey, String encryptionKey, String licenseText,
+    public void initializeSDK(String serverURL, String deviceKey, String encryptionKey, String licenseText,
         final Promise promise
     ) {
         final Activity activity = getCurrentActivity();

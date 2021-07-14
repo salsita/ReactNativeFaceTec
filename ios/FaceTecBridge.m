@@ -12,7 +12,6 @@
 
 RCT_EXTERN_METHOD(
   initializeSDK:(NSString *)serverURL
-  jwtAccessToken:(NSString *)jwtAccessToken
   deviceKey:(NSString *)deviceKey
   encryptionKey:(NSString *)encryptionKey
   licenseText:(NSString *)licenseText
