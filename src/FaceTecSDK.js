@@ -39,6 +39,7 @@ export class FaceTecSDK {
   async enroll(enrollmentIdentifier, maxRetries = -1, timeout = -1) {
     const { module } = this
 
+    // TODO Rename as this is not really a face verification but rather an enrollment
     return module.faceVerification(enrollmentIdentifier, maxRetries, timeout)
   }
 

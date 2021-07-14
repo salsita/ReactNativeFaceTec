@@ -20,10 +20,13 @@ import java.util.HashMap;
 
 import org.gooddollar.facetec.R.drawable;
 
+// TODO Allow these customizations to be passed from the RN later
+// to avoid modifying them in both iOS and Android. Also these messages need to be localized.
+
 public class Customization {
   private Customization() {}
 
-  final public static String resultSuccessMessage = "You’re a beautiful\n& unique unicorn!";
+  final public static String resultSuccessMessage = "You’re a beautiful\n& unique person!";
   final public static String resultFacescanUploadMessage = "Uploading Your face snapshot to verify";
   final public static String resultFacescanProcessingMessage = "Verifying you're\none of a kind";
 

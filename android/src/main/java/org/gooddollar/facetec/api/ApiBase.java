@@ -12,14 +12,13 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.facetec.sdk.FaceTecSDK;
 import org.gooddollar.facetec.api.NetworkingHelpers;
 
-public final class FaceVerification {
-  private FaceVerification() {}
+public final class ApiBase {
+  private ApiBase() {}
   private final static OkHttpClient http = NetworkingHelpers.getApiClient();
   private static String _serverURL;
   private static String _deviceKey;
@@ -61,39 +60,13 @@ public final class FaceVerification {
     void onSessionTokenReceived(String sessionToken);
   }
 
-  public static void register(String serverURL, String deviceKey) {
+  public static void init(String serverURL, String deviceKey) {
     _serverURL = serverURL;
     _deviceKey = deviceKey;
   }
 
   public static RequestBody jsonStringify(JSONObject body) {
     return RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString());
-  }
-
-  public static void getSessionToken(final SessionTokenCallback callback) {
-    // TODO Pass the URLs from the RN during the initializations if we want them custom?
-    Request tokenRequest = createRequest("/session-token", "get", new JSONObject());
-
-    sendRequest(tokenRequest, new APICallback() {
-      @Override
-      public void onSuccess(JSONObject response) {
-        try {
-            if(response.has("sessionToken") == false) {
-              throw new APIException("FaceTec API response is missing sessionToken", response);
-            }
-            callback.onSessionTokenReceived(response.getString("sessionToken"));
-        } catch (APIException exception) {
-          callback.onFailure(exception);
-        } catch (Exception exception) {
-          callback.onFailure(new APIException(exception, response));
-        }
-      }
-
-      @Override
-      public void onFailure(APIException exception) {
-        callback.onFailure(exception);
-      }
-    });
   }
 
   public static void enroll(String enrollmentIdentifier, JSONObject payload, final APICallback callback) {
@@ -109,18 +82,17 @@ public final class FaceVerification {
   }
 
   public static void enroll(String enrollmentIdentifier, RequestBody customRequest, @Nullable Integer timeout, final APICallback callback) {
-    Request enrollmentRequest = createRequest("/verify/face/" + enrollmentIdentifier, "put", customRequest);
-
+    // TODO Fetch API url from env?
+    Request enrollmentRequest = createRequest("/enrollment-3d" + enrollmentIdentifier, "post", customRequest);
     sendRequest(enrollmentRequest, timeout, callback);
   }
 
-  private static Request createRequest(String url, @Nullable String method, @Nullable RequestBody body) {
+  public static Request createRequest(String url, @Nullable String method, @Nullable RequestBody body) {
     Request.Builder request = new Request.Builder()
       .url(_serverURL + url)
       .header("Content-Type", "application/json")
       .header("X-Device-License-Key", _deviceKey)
       .header("User-Agent", FaceTecSDK.createFaceTecAPIUserAgentString(""));
-
 
     switch (method) {
       case "post":
@@ -129,22 +101,19 @@ public final class FaceVerification {
       case "put":
         request.put(body);
         break;
+      case "get":
+        request.get();
+        break;
     }
 
     return request.build();
   }
 
-  private static Request createRequest(String url, String method, JSONObject body) {
-    RequestBody requestBody = jsonStringify(body);
-
-    return createRequest(url, method, requestBody);
-  }
-
-  private static void sendRequest(Request request, final APICallback requestCallback) {
+  public static void sendRequest(Request request, final APICallback requestCallback) {
     sendRequest(request, null, requestCallback);
   }
 
-  private static void sendRequest(Request request, @Nullable Integer timeout, final APICallback requestCallback) {
+  public static void sendRequest(Request request, @Nullable Integer timeout, final APICallback requestCallback) {
     OkHttpClient httpClient = http;
 
     if (timeout != null) {

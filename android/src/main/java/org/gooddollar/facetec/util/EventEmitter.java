@@ -9,6 +9,7 @@ import com.facebook.react.bridge.WritableMap;
 import java.util.Map;
 import java.util.HashMap;
 
+// Events which can be subscribed to by the React Native Javascript code
 public final class EventEmitter {
   private EventEmitter() {}
   private static DeviceEventManagerModule.RCTDeviceEventEmitter rctEventEmitter;

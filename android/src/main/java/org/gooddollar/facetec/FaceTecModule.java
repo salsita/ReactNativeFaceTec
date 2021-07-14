@@ -15,7 +15,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.gooddollar.facetec.api.FaceVerification;
+import org.gooddollar.facetec.api.ApiBase;
 import org.gooddollar.facetec.processors.EnrollmentProcessor;
 import org.gooddollar.facetec.processors.ProcessingSubscriber;
 
@@ -145,12 +145,13 @@ public class FaceTecModule extends ReactContextBaseJavaModule {
             case DEVICE_IN_LANDSCAPE_MODE:
             case DEVICE_IN_REVERSE_PORTRAIT_MODE:
                 // status is already initialized - resolve promise with true
+                // TODO Pass dynamic strings and other configuration from the RN
                 FaceTecSDK.setDynamicStrings(Customization.UITextStrings);
                 promise.resolve(true);
                 break;
             case NEVER_INITIALIZED:
             case NETWORK_ISSUES:
-                FaceVerification.register(serverURL, deviceKey);
+                ApiBase.init(serverURL, deviceKey);
 
                 // based on licenseText value, init in prod|dev mode
                 if (licenseText != null && !licenseText.isEmpty()) {
@@ -193,6 +194,7 @@ public class FaceTecModule extends ReactContextBaseJavaModule {
                 // the value of successful determines if the sdk has been initialized or not
                 if (successful) {
                     // status is already initialized - resolve promise with true
+                    // TODO Again the whole "Customization" needs to be specified on RN part
                     FaceTecSDK.setDynamicStrings(Customization.UITextStrings);
                     promise.resolve(true);
                     return;

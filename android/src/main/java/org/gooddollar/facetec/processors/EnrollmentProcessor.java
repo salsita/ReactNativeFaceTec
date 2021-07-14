@@ -15,7 +15,9 @@ import com.facetec.sdk.FaceTecSessionStatus;
 import com.facetec.sdk.FaceTecSessionResult;
 import com.facetec.sdk.FaceTecCustomization;
 
-import org.gooddollar.facetec.api.FaceVerification;
+import org.gooddollar.facetec.api.ApiBase;
+import org.gooddollar.facetec.api.Session;
+import org.gooddollar.facetec.api.Enrollment;
 import org.gooddollar.facetec.api.NetworkingHelpers;
 import org.gooddollar.facetec.api.ProgressRequestBody;
 import okhttp3.RequestBody;
@@ -40,8 +42,6 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
   private String enrollmentIdentifier = null;
   private boolean isSuccess = false;
 
-  // TODO: research about unload for BOTH ios/android
-
   public EnrollmentProcessor(Context context, ProcessingSubscriber subscriber) {
     this.context = context;
     this.subscriber = subscriber;
@@ -64,8 +64,8 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     final Context ctx = this.context;
     final ProcessingSubscriber subscriber = this.subscriber;
 
-    final FaceVerification.SessionTokenCallback onSessionTokenRetrieved =
-      new FaceVerification.SessionTokenCallback() {
+    final Session.SessionTokenCallback onSessionTokenRetrieved =
+      new Session.SessionTokenCallback() {
         @Override
         public void onSessionTokenReceived(String sessionToken) {
           // when got token successfully - start session
@@ -74,7 +74,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
         }
 
         @Override
-        public void onFailure(FaceVerification.APIException exception) {
+        public void onFailure(ApiBase.APIException exception) {
           subscriber.onSessionTokenError(exception.getResponse().toString());
         }
       };
@@ -95,7 +95,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
       @Override
       public void onSuccess() {
         // on premissions granted - issue token
-        FaceVerification.getSessionToken(onSessionTokenRetrieved);
+        Session.getSessionToken(onSessionTokenRetrieved);
       }
 
       @Override
@@ -133,7 +133,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
   private RequestBody createEnrollmentRequest(JSONObject payload) {
     final FaceTecFaceScanResultCallback resultCallback = lastResultCallback;
 
-    return new ProgressRequestBody(FaceVerification.jsonStringify(payload),
+    return new ProgressRequestBody(ApiBase.jsonStringify(payload),
       new ProgressRequestBody.Listener() {
         @Override
         public void onUploadProgressChanged(long bytesWritten, long totalBytes) {
@@ -170,7 +170,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     }
 
     RequestBody request = createEnrollmentRequest(payload);
-    FaceVerification.enroll(enrollmentIdentifier, request, timeout, new FaceVerification.APICallback() {
+    Enrollment.enroll(enrollmentIdentifier, request, timeout, new ApiBase.APICallback() {
       @Override
       public void onSuccess(JSONObject response) {
         String successMessage = Customization.resultSuccessMessage;
@@ -185,14 +185,14 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
       }
 
       @Override
-      public void onFailure(FaceVerification.APIException exception) {
+      public void onFailure(ApiBase.APIException exception) {
         resultCallback.uploadProgress(1);
         EnrollmentProcessor.this.handleEnrollmentError(exception);
       }
     });
   }
 
-  private void handleEnrollmentError(FaceVerification.APIException exception) {
+  private void handleEnrollmentError(ApiBase.APIException exception) {
     JSONObject response = exception.getResponse();
 
     // by default we'll use exception's message as lastMessage
@@ -204,6 +204,8 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
       if (enrollmentResult == null) {
         enrollmentResult = new JSONObject();
       }
+
+      // TODO Modify this for our case
 
       // if isDuplicate is strictly true, that means we have dup face
       boolean isDuplicateIssue = enrollmentResult.optBoolean("isDuplicate", false);
