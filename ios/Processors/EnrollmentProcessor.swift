@@ -139,6 +139,7 @@ class EnrollmentProcessor: NSObject, FaceTecFaceScanProcessorDelegate, URLSessio
         ]
 
         FaceVerification.shared.enroll(
+            lastResult.sessionId,
             enrollmentIdentifier!,
             payload,
             withTimeout: timeout,

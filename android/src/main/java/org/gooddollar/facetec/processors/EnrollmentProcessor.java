@@ -123,7 +123,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     EventEmitter.dispatch(EventEmitter.UXEvent.CAPTURE_DONE);
 
     // perform verification
-    sendEnrollmentRequest(sessionResult.getSessionId());
+    sendEnrollmentRequest();
   }
 
   public void onFaceTecSDKCompletelyDone() {
@@ -152,7 +152,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     );
   }
 
-  private void sendEnrollmentRequest(String sessionId) {
+  private void sendEnrollmentRequest() {
     final FaceTecFaceScanResultCallback resultCallback = lastResultCallback;
     JSONObject payload = new JSONObject();
 
@@ -170,7 +170,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     }
 
     RequestBody request = createEnrollmentRequest(payload);
-    Enrollment.enroll(sessionId, enrollmentIdentifier, request, timeout, new ApiBase.APICallback() {
+    Enrollment.enroll(lastResult.getSessionId(), enrollmentIdentifier, request, timeout, new ApiBase.APICallback() {
       @Override
       public void onSuccess(JSONObject response) {
         String successMessage = Customization.resultSuccessMessage;
