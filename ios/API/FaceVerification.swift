@@ -36,7 +36,7 @@ class FaceVerification {
                 return
             }
 
-            guard let sessionToken = response?[self.sessionToken] as? String else {
+            guard let sessionToken = response?[self.sessionTokenProperty] as? String else {
                 sessionTokenCallback(nil, FaceVerificationError.emptyResponse)
                 return
             }
@@ -103,7 +103,7 @@ class FaceVerification {
         _ parameters: [String : Any] = [:],
         _ resultCallback: @escaping ([String: AnyObject]?, Error?) -> Void
     ) -> Void {
-        request(url, method, parameters, nil, nil, resultCallback)
+        request(sessionId, url, method, parameters, nil, nil, resultCallback)
     }
 
     private func request(
@@ -114,7 +114,7 @@ class FaceVerification {
         _ withTimeout: TimeInterval? = nil,
         _ resultCallback: @escaping ([String: AnyObject]?, Error?) -> Void
     ) -> Void {
-        request(url, method, parameters, withTimeout, nil, resultCallback)
+        request(sessionId, url, method, parameters, withTimeout, nil, resultCallback)
     }
 
     private func request(
@@ -125,7 +125,7 @@ class FaceVerification {
         _ withDelegate: URLSessionDelegate? = nil,
         _ resultCallback: @escaping ([String: AnyObject]?, Error?) -> Void
     ) -> Void {
-        request(url, method, parameters, nil, withDelegate, resultCallback)
+        request(sessionId, url, method, parameters, nil, withDelegate, resultCallback)
     }
 
     private func request(
@@ -186,7 +186,7 @@ class FaceVerification {
 
             request.addValue("application/json", forHTTPHeaderField: "Content-Type")
             request.addValue(deviceKey!, forHTTPHeaderField: "X-Device-License-Key")
-            request.addValue(FaceTec.sdk.createFaceTecAPIUserAgentString(sessionId != nil ? sessionId : ""), forHTTPHeaderField: "User-Agent")
+            request.addValue(FaceTec.sdk.createFaceTecAPIUserAgentString(sessionId != nil ? sessionId! : ""), forHTTPHeaderField: "User-Agent")
 
             request.httpBody = try! JSONSerialization.data(withJSONObject: parameters, options: JSONSerialization.WritingOptions(rawValue: 0))
 
