@@ -16,8 +16,8 @@ import com.facetec.sdk.FaceTecSessionResult;
 import com.facetec.sdk.FaceTecCustomization;
 
 import org.gooddollar.facetec.api.ApiBase;
-import org.gooddollar.facetec.api.Session;
-import org.gooddollar.facetec.api.Enrollment;
+import org.gooddollar.facetec.api.SessionAPI;
+import org.gooddollar.facetec.api.EnrollmentAPI;
 import org.gooddollar.facetec.api.NetworkingHelpers;
 import org.gooddollar.facetec.api.ProgressRequestBody;
 import okhttp3.RequestBody;
@@ -61,11 +61,10 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     final Context ctx = this.context;
     final ProcessingSubscriber subscriber = this.subscriber;
 
-    final Session.SessionTokenCallback onSessionTokenRetrieved =
-      new Session.SessionTokenCallback() {
+    final SessionAPI.SessionTokenCallback onSessionTokenRetrieved =
+      new SessionAPI.SessionTokenCallback() {
         @Override
         public void onSessionTokenReceived(String sessionToken) {
-          // when got token successfully - start session
           FaceTecSessionActivity.createAndLaunchSession(ctx, EnrollmentProcessor.this, sessionToken);
           EventEmitter.dispatch(EventEmitter.UXEvent.UI_READY);
         }
@@ -83,12 +82,13 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
       this.timeout = timeout;
     }
 
+    // TODO Camera permissions should be requested from the RN side
     // request camera permissions.
     this.permissions.requestCameraPermissions(new Permissions.PermissionsCallback() {
       @Override
       public void onSuccess() {
         // on premissions granted - issue token
-        Session.getSessionToken(onSessionTokenRetrieved);
+        SessionAPI.getSessionToken(onSessionTokenRetrieved);
       }
 
       @Override
@@ -115,7 +115,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     // notifying that capturing is done
     EventEmitter.dispatch(EventEmitter.UXEvent.CAPTURE_DONE);
 
-    // perform verification
+    // perform the enrollment
     sendEnrollmentRequest();
   }
 
@@ -156,6 +156,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
       payload.put("faceScan", lastResult.getFaceScanBase64());
       payload.put("auditTrailImage", lastResult.getAuditTrailCompressedBase64()[0]);
       payload.put("lowQualityAuditTrailImage", lastResult.getLowQualityAuditTrailCompressedBase64()[0]);
+      payload.put("externalDatabaseRefID", sampleAppActivity.getLatestExternalDatabaseRefID());
       payload.put("sessionId", lastResult.getSessionId());
     } catch(Exception e) {
       lastMessage = "Exception raised while attempting to create JSON payload for upload.";
@@ -163,7 +164,7 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     }
 
     RequestBody request = createEnrollmentRequest(payload);
-    Enrollment.enroll(lastResult.getSessionId(), enrollmentIdentifier, request, timeout, new ApiBase.APICallback() {
+    EnrollmentAPI.enroll(lastResult.getSessionId(), enrollmentIdentifier, request, timeout, new ApiBase.APICallback() {
       @Override
       public void onSuccess(JSONObject response) {
         String successMessage = Customization.resultSuccessMessage;
@@ -174,7 +175,10 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
         EnrollmentProcessor.this.lastMessage = successMessage;
         FaceTecCustomization.overrideResultScreenSuccessMessage = successMessage;
 
-        resultCallback.succeed();
+        // In v9.2.0+, simply pass in scanResultBlob to the proceedToNextStep function to advance the User flow.
+        // scanResultBlob is a proprietary, encrypted blob that controls the logic for what happens next for the User.
+        String scanResultBlob = responseJSON.getString("scanResultBlob");
+        resultCallback.proceedToNextStep(scanResultBlob);
       }
 
       @Override

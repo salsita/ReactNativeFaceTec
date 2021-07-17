@@ -5,8 +5,8 @@ import org.json.JSONObject;
 
 import org.gooddollar.facetec.api.ApiBase;
 
-public final class Session {
-  private Session() {}
+public final class SessionAPI {
+  private SessionAPI() {}
 
   public interface SessionTokenCallback {
     void onSessionTokenReceived(String sessionToken);

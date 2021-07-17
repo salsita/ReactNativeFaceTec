@@ -128,28 +128,34 @@ public final class ApiBase {
           response.body().close();
 
           JSONObject responseJSON = new JSONObject(responseString);
+          boolean wasProcessed = responseJSON.getBoolean("wasProcessed");
 
-          if (responseJSON.has(succeedProperty) == false) {
-            throw new APIException(unexpectedMessage, responseJSON);
+          if (wasProcessed) {
+            if (responseJSON.has(succeedProperty) == false) {
+              throw new APIException(unexpectedMessage, responseJSON);
+            }
+  
+            String errorMessage = null;
+            boolean didSucceed = responseJSON.getBoolean(succeedProperty);
+  
+            if (didSucceed == true) {
+              requestCallback.onSuccess(responseJSON);
+              return;
+            }
+  
+            if (responseJSON.has(errorMessageProperty) == true) {
+              errorMessage = responseJSON.getString(errorMessageProperty);
+            }
+  
+            if (errorMessage == null) {
+              errorMessage = unexpectedMessage;
+            }
+            throw new APIException(errorMessage, responseJSON);
+          }
+          else {
+            throw new APIException("Unexpected result from the FaceTec API. Request was not processed.", responseJSON);
           }
 
-          String errorMessage = null;
-          boolean didSucceed = responseJSON.getBoolean(succeedProperty);
-
-          if (didSucceed == true) {
-            requestCallback.onSuccess(responseJSON);
-            return;
-          }
-
-          if (responseJSON.has(errorMessageProperty) == true) {
-            errorMessage = responseJSON.getString(errorMessageProperty);
-          }
-
-          if (errorMessage == null) {
-            errorMessage = unexpectedMessage;
-          }
-
-          throw new APIException(errorMessage, responseJSON);
         } catch (APIException exception) {
           requestCallback.onFailure(exception);
         } catch (Exception exception) {

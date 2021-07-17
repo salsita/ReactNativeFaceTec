@@ -7,8 +7,8 @@ import org.json.JSONObject;
 
 import org.gooddollar.facetec.api.ApiBase;
 
-public final class Enrollment {
-  private Enrollment() {}
+public final class EnrollmentAPI {
+  private EnrollmentAPI() {}
 
   public static void enroll(String sessionId, String enrollmentIdentifier, JSONObject payload, final ApiBase.APICallback callback) {
     enroll(sessionId, enrollmentIdentifier, ApiBase.jsonStringify(payload), null, callback);
