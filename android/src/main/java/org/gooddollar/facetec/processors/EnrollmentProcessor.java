@@ -54,10 +54,6 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
   }
 
   public void enroll(String enrollmentIdentifier) {
-    enroll(enrollmentIdentifier, null, null);
-  }
-
-  public void enroll(String enrollmentIdentifier) {
     enroll(enrollmentIdentifier, null);
   }
 
