@@ -4,9 +4,7 @@ import FaceTecSDK
 import AVFoundation
 
 class EnrollmentProcessor: NSObject, FaceTecFaceScanProcessorDelegate, URLSessionDelegate, URLSessionTaskDelegate {
-    var maxRetries: Int?
     var enrollmentIdentifier: String!
-    private let defaultMaxRetries = -1
 
     var isSuccess = false
     var lastMessage: String!
@@ -18,12 +16,6 @@ class EnrollmentProcessor: NSObject, FaceTecFaceScanProcessorDelegate, URLSessio
     var delegate: ProcessingDelegate
     var presentSessionVCFrom: UIViewController
 
-    private var alwaysRetry: Bool {
-        get {
-            return maxRetries == nil || maxRetries! < 0
-        }
-    }
-
     init(fromVC: UIViewController, delegate: ProcessingDelegate) {
         self.delegate = delegate
         self.presentSessionVCFrom = fromVC
@@ -31,18 +23,10 @@ class EnrollmentProcessor: NSObject, FaceTecFaceScanProcessorDelegate, URLSessio
         super.init()
     }
 
-    func enroll(_ enrollmentIdentifier: String, _ maxRetries: Int? = nil, _ timeout: Int? = nil) {
+    func enroll(_ enrollmentIdentifier: String, _ timeout: Int? = nil) {
         requestCameraPermissions() {
             self.startSession() { sessionToken in
                 self.enrollmentIdentifier = enrollmentIdentifier
-                self.maxRetries = self.defaultMaxRetries
-
-                // there're issues with passing nil / null for numbers
-                // we're passing -1 if no param was set on JS side
-                // so here we have to add additional > (or >=) 0 check
-                if maxRetries != nil && maxRetries! >= 0 {
-                    self.maxRetries = maxRetries!
-                }
 
                 if timeout != nil && timeout! > 0 {
                   self.timeout = Double(timeout!) / 1000
@@ -156,7 +140,8 @@ class EnrollmentProcessor: NSObject, FaceTecFaceScanProcessorDelegate, URLSessio
             self.lastMessage = Customization.resultSuccessMessage
 
             FaceTecCustomization.setOverrideResultScreenSuccessMessage(self.lastMessage)
-            self.resultCallback.onFaceScanResultSucceed()
+            // TODO Move to next step - replace with non-deprecated func.
+            // self.resultCallback.onFaceScanResultProceedToNextStep()
         }
     }
 
@@ -168,39 +153,42 @@ class EnrollmentProcessor: NSObject, FaceTecFaceScanProcessorDelegate, URLSessio
 
         if response != nil {
             let enrollmentResult = response?["enrollmentResult"] as? [String: Bool]
+            
+            // TODO Modify handling of error case for our case
 
-            // if isDuplicate is strictly true, that means we have dup face
-            let isDuplicateIssue = true == enrollmentResult?["isDuplicate"]
-            let is3DMatchIssue = true == enrollmentResult?["isNotMatch"]
-            let isLivenessIssue = false == enrollmentResult?["isLive"]
-            let isEnrolled = true == enrollmentResult?["isEnrolled"]
+            // // if isDuplicate is strictly true, that means we have dup face
+            // let isDuplicateIssue = true == enrollmentResult?["isDuplicate"]
+            // let is3DMatchIssue = true == enrollmentResult?["isNotMatch"]
+            // let isLivenessIssue = false == enrollmentResult?["isLive"]
+            // let isEnrolled = true == enrollmentResult?["isEnrolled"]
 
-            // if there's no duplicate / 3d match issues but we have
-            // liveness issue strictly - we'll check for possible session retry
-            if !isDuplicateIssue && !is3DMatchIssue && isLivenessIssue {
-                // if haven't reached retries threshold or max retries is disabled
-                // (is null or < 0) we'll ask to retry capturing
-                if alwaysRetry || retryAttempt < maxRetries! {
-                    let retryMessage = NSMutableAttributedString.init(string: lastMessage)
+            // // if there's no duplicate / 3d match issues but we have
+            // // liveness issue strictly - we'll check for possible session retry
+            // if !isDuplicateIssue && !is3DMatchIssue && isLivenessIssue {
+            //     // if haven't reached retries threshold or max retries is disabled
+            //     // (is null or < 0) we'll ask to retry capturing
+            //     if alwaysRetry || retryAttempt < maxRetries! {
+            //         let retryMessage = NSMutableAttributedString.init(string: lastMessage)
 
-                    // increasing retry attempts counter
-                    retryAttempt += 1
-                    // showing reason
-                    resultCallback.onFaceScanUploadMessageOverride(uploadMessageOverride: retryMessage)
-                    // notifying about retry
-                    resultCallback.onFaceScanResultRetry()
+            //         // increasing retry attempts counter
+            //         retryAttempt += 1
+            //         // showing reason
+            //         resultCallback.onFaceScanUploadMessageOverride(uploadMessageOverride: retryMessage)
+            //         // notifying about retry
+            //         // TODO this is deprecated, replace by onFaceScanResultProceedToNextStep
+            //         // resultCallback.onFaceScanResultRetry()
 
-                    // dispatching retry event
-                    EventEmitter.shared.dispatch(.FV_RETRY, [
-                        "reason": lastMessage!,
-                        "match3d": !is3DMatchIssue,
-                        "liveness": !isLivenessIssue,
-                        "duplicate": isDuplicateIssue,
-                        "enrolled": isEnrolled
-                    ])
+            //         // dispatching retry event
+            //         EventEmitter.shared.dispatch(.FV_RETRY, [
+            //             "reason": lastMessage!,
+            //             "match3d": !is3DMatchIssue,
+            //             "liveness": !isLivenessIssue,
+            //             "duplicate": isDuplicateIssue,
+            //             "enrolled": isEnrolled
+            //         ])
 
-                    return
-                }
+            //         return
+            //     }
             }
         }
 

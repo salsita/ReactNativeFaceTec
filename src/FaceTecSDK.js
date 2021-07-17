@@ -36,11 +36,11 @@ export class FaceTecSDK {
     return module.initializeSDK(serverUrl, deviceKey, encryptionKey, licenseText)
   }
 
-  async enroll(enrollmentIdentifier, maxRetries = -1, timeout = -1) {
+  async enroll(enrollmentIdentifier, timeout = -1) {
     const { module } = this
 
     // TODO Rename as this is not really a face verification but rather an enrollment
-    return module.faceVerification(enrollmentIdentifier, maxRetries, timeout)
+    return module.faceVerification(enrollmentIdentifier, timeout)
   }
 
   addListener(event, handler) {

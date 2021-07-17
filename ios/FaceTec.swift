@@ -128,9 +128,9 @@ open class FaceTecModule: RCTEventEmitter {
         }
     }
 
-    @objc(faceVerification:maxRetries:timeout:resolver:rejecter:)
+    @objc(faceVerification:timeout:resolver:rejecter:)
     open func faceVerification(
-        _ enrollmentIdentifier: String, maxRetries: Int, timeout: Int,
+        _ enrollmentIdentifier: String, timeout: Int,
         resolver resolve: @escaping RCTPromiseResolveBlock,
         rejecter reject: @escaping RCTPromiseRejectBlock) -> Void
     {
@@ -140,7 +140,7 @@ open class FaceTecModule: RCTEventEmitter {
         getPresentedViewController() { presentedVC in
             let processor = EnrollmentProcessor(fromVC: presentedVC, delegate: delegate)
 
-            processor.enroll(enrollmentIdentifier, maxRetries, timeout)
+            processor.enroll(enrollmentIdentifier, timeout)
         }
     }
 

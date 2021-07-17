@@ -25,6 +25,8 @@ import okhttp3.RequestBody;
 import org.gooddollar.facetec.processors.ProcessingSubscriber;
 import org.gooddollar.facetec.util.EventEmitter;
 import org.gooddollar.facetec.util.Customization;
+// TODO Remove asking for permissions from the native code and handle it on the RN side so
+// it is not handled separately in both iOS and Android
 import org.gooddollar.facetec.util.Permissions;
 
 public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
@@ -37,7 +39,6 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
   private String lastMessage = null;
 
   private Integer timeout = null;
-  private int maxRetries = -1;
   private int retryAttempt = 0;
   private String enrollmentIdentifier = null;
   private boolean isSuccess = false;
@@ -56,11 +57,11 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
     enroll(enrollmentIdentifier, null, null);
   }
 
-  public void enroll(String enrollmentIdentifier, final Integer maxRetries) {
-    enroll(enrollmentIdentifier, maxRetries, null);
+  public void enroll(String enrollmentIdentifier) {
+    enroll(enrollmentIdentifier, null);
   }
 
-  public void enroll(final String enrollmentIdentifier, @Nullable final Integer maxRetries, @Nullable final Integer timeout) {
+  public void enroll(final String enrollmentIdentifier, @Nullable final Integer timeout) {
     final Context ctx = this.context;
     final ProcessingSubscriber subscriber = this.subscriber;
 
@@ -79,12 +80,8 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
         }
       };
 
-    // store enrollmentIdentifier, maxRetries and timeout in the corresponding instance vars
+    // store enrollmentIdentifier and timeout in the corresponding instance vars
     this.enrollmentIdentifier = enrollmentIdentifier;
-
-    if ((maxRetries != null) && (maxRetries >= 0)) {
-      this.maxRetries = maxRetries;
-    }
 
     if ((timeout != null) && (timeout > 0)) {
       this.timeout = timeout;
@@ -207,39 +204,39 @@ public class EnrollmentProcessor implements FaceTecFaceScanProcessor {
 
       // TODO Modify this for our case
 
-      // if isDuplicate is strictly true, that means we have dup face
-      boolean isDuplicateIssue = enrollmentResult.optBoolean("isDuplicate", false);
-      boolean is3DMatchIssue = enrollmentResult.optBoolean("isNotMatch", false);
-      boolean isEnrolled = enrollmentResult.optBoolean("isEnrolled", false);
-      // in JS code we're checking for false === isLive strictly. so if no isLive flag in the response,
-      // we assume that liveness check was successfull. That's why we're setting true as fallback value
-      boolean isLivenessIssue = enrollmentResult.optBoolean("isLive", true);
+      // // if isDuplicate is strictly true, that means we have dup face
+      // boolean isDuplicateIssue = enrollmentResult.optBoolean("isDuplicate", false);
+      // boolean is3DMatchIssue = enrollmentResult.optBoolean("isNotMatch", false);
+      // boolean isEnrolled = enrollmentResult.optBoolean("isEnrolled", false);
+      // // in JS code we're checking for false === isLive strictly. so if no isLive flag in the response,
+      // // we assume that liveness check was successfull. That's why we're setting true as fallback value
+      // boolean isLivenessIssue = enrollmentResult.optBoolean("isLive", true);
 
-      // if there's no duplicate / 3d match issues but we have
-      // liveness issue strictly - we'll check for possible session retry
-      if (!isDuplicateIssue && !is3DMatchIssue && isLivenessIssue) {
-        // if haven't reached retries threshold or max retries is disabled
-        // (is null or < 0) we'll ask to retry capturing
-        if ((maxRetries < 0) || (retryAttempt < maxRetries)) {
-          // increasing retry attempts counter
-          retryAttempt += 1;
-          // showing reason
-          lastResultCallback.uploadMessageOverride(lastMessage);
-          // notifying about retry
-          lastResultCallback.retry();
+      // // if there's no duplicate / 3d match issues but we have
+      // // liveness issue strictly - we'll check for possible session retry
+      // if (!isDuplicateIssue && !is3DMatchIssue && isLivenessIssue) {
+      //   // if haven't reached retries threshold or max retries is disabled
+      //   // (is null or < 0) we'll ask to retry capturing
+      //   if ((maxRetries < 0) || (retryAttempt < maxRetries)) {
+      //     // increasing retry attempts counter
+      //     retryAttempt += 1;
+      //     // showing reason
+      //     lastResultCallback.uploadMessageOverride(lastMessage);
+      //     // notifying about retry
+      //     lastResultCallback.retry();
 
-          // dispatching retry event
-          WritableMap eventData = Arguments.createMap();
+      //     // dispatching retry event
+      //     WritableMap eventData = Arguments.createMap();
 
-          eventData.putString("reason", lastMessage);
-          eventData.putBoolean("match3d", !is3DMatchIssue);
-          eventData.putBoolean("liveness", !isLivenessIssue);
-          eventData.putBoolean("duplicate", isDuplicateIssue);
-          eventData.putBoolean("enrolled", isEnrolled);
+      //     eventData.putString("reason", lastMessage);
+      //     eventData.putBoolean("match3d", !is3DMatchIssue);
+      //     eventData.putBoolean("liveness", !isLivenessIssue);
+      //     eventData.putBoolean("duplicate", isDuplicateIssue);
+      //     eventData.putBoolean("enrolled", isEnrolled);
 
-          EventEmitter.dispatch(EventEmitter.UXEvent.FV_RETRY, eventData);
-        }
-      }
+      //     EventEmitter.dispatch(EventEmitter.UXEvent.FV_RETRY, eventData);
+      //   }
+      // }
     }
 
     lastResultCallback.cancel();
